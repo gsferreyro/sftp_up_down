@@ -1,0 +1,11 @@
+__pycache__
+archivos
+# logs
+*.log
+log
+# Config/Parameters File
+config
+config*.ini
+config.py
+parametros.py
+parameters.py
