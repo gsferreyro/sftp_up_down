@@ -60,7 +60,11 @@ if os.path.exists(source_path) and os.path.isdir(source_path):
     extlog().debug(f"{getframeinfo(currentframe()).lineno}: Conectando al SFTP")
     if live_run:
         extlog().debug(f"{getframeinfo(currentframe()).lineno}: Conecta SFTP por live_run {live_run}")
-        sftp = pysftp.Connection(host=hostname, username=username, password=password, cnopts=cnopts)
+        try:
+            sftp = pysftp.Connection(host=hostname, username=username, password=password, cnopts=cnopts)
+        except Exception as e:
+            extlog().error(f"{getframeinfo(currentframe()).lineno}: Error al conectar al SFTP: {e}")
+            exit_script(1)
     else:
         extlog().debug(f"{getframeinfo(currentframe()).lineno}: No conecta SFTP por live_run {live_run}")
     
@@ -72,7 +76,11 @@ if os.path.exists(source_path) and os.path.isdir(source_path):
             extlog().debug(f"{getframeinfo(currentframe()).lineno}: Sube {source_path}\{source_file} a {dest_path_out}{source_file}")
             if live_run:
                 extlog().debug(f"{getframeinfo(currentframe()).lineno}: Ejecuta PUT por live_run {live_run}")
-                sftp.put(localpath=f'{source_path}\{source_file}', remotepath=f'{dest_path_out}{source_file}')
+                try:
+                    sftp.put(localpath=f'{source_path}\{source_file}', remotepath=f'{dest_path_out}{source_file}')
+                except Exception as e:
+                    extlog().error(f"{getframeinfo(currentframe()).lineno}: Error al subir el archivo {source_file}: {e}")
+                    exit_script(1)
             else:
                 extlog().debug(f"{getframeinfo(currentframe()).lineno}: No ejecuta PUT por live_run {live_run}")
 
@@ -107,7 +115,11 @@ if os.path.exists(source_path) and os.path.isdir(source_path):
                 extlog().debug(f"{getframeinfo(currentframe()).lineno}: Conectando al FTP")
                 if live_run:
                     extlog().debug(f"{getframeinfo(currentframe()).lineno}: Conecta SFTP por live_run {live_run}")
-                    sftp = pysftp.Connection(host=hostname, username=username, password=password, cnopts=cnopts)
+                    try:
+                        sftp = pysftp.Connection(host=hostname, username=username, password=password, cnopts=cnopts)
+                    except Exception as e:
+                        extlog().error(f"{getframeinfo(currentframe()).lineno}: Error al conectar al SFTP: {e}")
+                        exit_script(1)
                 else:
                     extlog().debug(f"{getframeinfo(currentframe()).lineno}: No conecta SFTP por live_run {live_run}")
 
@@ -116,7 +128,11 @@ if os.path.exists(source_path) and os.path.isdir(source_path):
                     extlog().debug(f"{getframeinfo(currentframe()).lineno}: Descargando el archivo {dest_path_in}{response_file_name_1} en {source_path_finished}\{response_file_name_1}")
                     if live_run:
                         extlog().debug(f"{getframeinfo(currentframe()).lineno}: Ejecuta GET por live_run {live_run}")
-                        sftp.get(f'{dest_path_in}{response_file_name_1}', f'{source_path_finished}\{response_file_name_1}')
+                        try:
+                            sftp.get(f'{dest_path_in}{response_file_name_1}', f'{source_path_finished}\{response_file_name_1}')
+                        except Exception as e:
+                            extlog().error(f"{getframeinfo(currentframe()).lineno}: Error al descargar el archivo {response_file_name_1}: {e}")
+                            exit_script(1)
                     else:
                         extlog().debug(f"{getframeinfo(currentframe()).lineno}: No ejecuta GET por live_run {live_run}")
 
@@ -125,15 +141,25 @@ if os.path.exists(source_path) and os.path.isdir(source_path):
                     extlog().debug(f"{getframeinfo(currentframe()).lineno}: Descargando el archivo {dest_path_in}{response_file_name_2} en {source_path_finished}\{response_file_name_1}")
                     if live_run:
                         extlog().debug(f"{getframeinfo(currentframe()).lineno}: Ejecuta GET por live_run {live_run}")
-                        sftp.get(f'{dest_path_in}{response_file_name_2}', f'{source_path_finished}\{response_file_name_2}')
+                        try:
+                            sftp.get(f'{dest_path_in}{response_file_name_2}', f'{source_path_finished}\{response_file_name_2}')
+                        except Exception as e:
+                            extlog().error(f"{getframeinfo(currentframe()).lineno}: Error al descargar el archivo {response_file_name_2}: {e}")
+                            exit_script(1)
                     else:
                         extlog().debug(f"{getframeinfo(currentframe()).lineno}: No ejecuta GET por live_run {live_run}")
 
                 if os.path.exists(f'{source_path_finished}\{response_file_name_1}') and os.path.exists(f'{source_path_finished}\{response_file_name_2}'):
                     extlog().debug(f"{getframeinfo(currentframe()).lineno}: Comprimiendo {source_path_finished}\{response_file_name_1} y {source_path_finished}\{response_file_name_2} en {source_path_finished}\{now_yyyymmdd}.zip")
-                    zip_files(f'{source_path_finished}\{now_yyyymmdd}.zip', f'{source_path_finished}\{response_file_name_1}', f'{source_path_finished}\{response_file_name_2}')
+                    try:
+                        zip_files(f'{source_path_finished}\{now_yyyymmdd}.zip', f'{source_path_finished}\{response_file_name_1}', f'{source_path_finished}\{response_file_name_2}')
+                    except Exception as e:
+                        extlog().error(f"{getframeinfo(currentframe()).lineno}: Error al comprimir los archivos de respuesta: {e}")
                     extlog().debug(f"{getframeinfo(currentframe()).lineno}: Mueve {source_path_uploaded}\{source_file} a {source_path_finished}\{source_file}")
-                    shutil.move(f'{source_path_uploaded}\{source_file}', f'{source_path_finished}\{source_file}')
+                    try:
+                        shutil.move(f'{source_path_uploaded}\{source_file}', f'{source_path_finished}\{source_file}')
+                    except Exception as e:
+                        extlog().error(f"{getframeinfo(currentframe()).lineno}: Error al mover el archivo {source_file}: {e}")
 
                     smtp_server = get_config(section="SMTP", option="server")
                     smtp_port = get_config(section="SMTP", option="port")
@@ -161,10 +187,13 @@ if os.path.exists(source_path) and os.path.isdir(source_path):
 
                     extlog().debug(f"{getframeinfo(currentframe()).lineno}: Enviando correo a {to_addr}")
                     # Enviar el correo
-                    with smtplib.SMTP(smtp_server, smtp_port) as server:
-                        server.starttls()
-                        server.login(smtp_user, smtp_password)
-                        server.sendmail(from_addr, to_addr, msg.as_string())
+                    try:
+                        with smtplib.SMTP(smtp_server, smtp_port) as server:
+                            server.starttls()
+                            server.login(smtp_user, smtp_password)
+                            server.sendmail(from_addr, to_addr, msg.as_string())
+                    except Exception as e:
+                        extlog().error(f"{getframeinfo(currentframe()).lineno}: Error al enviar el correo: {e}")
                     if live_run:
                         extlog().debug(f"{getframeinfo(currentframe()).lineno}: Ejecuta sftp.close por live_run {live_run}")
                         try:
